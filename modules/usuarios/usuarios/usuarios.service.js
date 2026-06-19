@@ -5,18 +5,18 @@ import bucket from "../../shared/supabase/supabase.js";
 import { UpdateUsuarioSchema, UpdateRolSchema } from "./usuarios.schema.js";
 import usuariosRepository from "./usuarios.repository.js";
 
-const getAll = () => usuariosRepository.findAll();
+const getAll = (activo = null) => usuariosRepository.findAll(activo);
 
 const getByRole = (rol) => usuariosRepository.findByRole(rol);
 
-const getById = async (id) => {
-  const user = await usuariosRepository.findById(id);
+const getById = async (id, soloActivos = true) => {
+  const user = await usuariosRepository.findById(id, soloActivos);
   if (!user) throw new utils.CustomError(AnomalyCode.userDoesNotExist, "Usuario no encontrado");
   return user;
 };
 
 const update = async (id, body, file) => {
-  const current = await getById(id);
+  const current = await getById(id, false); // Permitir editar inactivos
   const parsed = UpdateUsuarioSchema.parse(body);
 
   const data = {
@@ -57,7 +57,7 @@ const update = async (id, body, file) => {
 
 const updateRol = async (id, body) => {
   const { rol } = UpdateRolSchema.parse(body);
-  await getById(id);
+  await getById(id, false);
 
   const trx = await db.transaction();
   try {
@@ -70,4 +70,18 @@ const updateRol = async (id, body) => {
   }
 };
 
-export default { getAll, getByRole, getById, update, updateRol };
+const updateEstado = async (id, activo) => {
+  await getById(id, false); // Verificar que existe, incluso si está inactivo
+
+  const trx = await db.transaction();
+  try {
+    const [user] = await usuariosRepository.updateEstado(trx, id, activo);
+    await trx.commit();
+    return user;
+  } catch (error) {
+    await trx.rollback();
+    throw new utils.CustomError(AnomalyCode.dataBaseError, error.message);
+  }
+};
+
+export default { getAll, getByRole, getById, update, updateRol, updateEstado };

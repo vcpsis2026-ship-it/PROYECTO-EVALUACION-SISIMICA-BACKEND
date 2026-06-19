@@ -19,8 +19,14 @@ router.use(authMiddleware.authenticateUser.bind(authMiddleware));
  * @swagger
  * /api/v1/usuarios:
  *   get:
- *     summary: Obtener todos los usuarios activos
+ *     summary: Obtener todos los usuarios (filtro opcional por estado activo)
  *     tags: [Usuarios]
+ *     parameters:
+ *       - in: query
+ *         name: activo
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por usuarios activos (true) o inactivos (false). Si no se envía, trae todos.
  *     responses:
  *       200:
  *         description: Lista de usuarios activos
@@ -150,6 +156,73 @@ router.patch(
   "/:id/rol",
   authMiddleware.requireAdmin.bind(authMiddleware),
   usuariosController.updateRol
+);
+
+/**
+ * @swagger
+ * /api/v1/usuarios/{id}:
+ *   patch:
+ *     summary: Editar parcialmente a un usuario (solo administradores)
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               telefono:
+ *                 type: string
+ *               direccion:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado
+ */
+router.patch(
+  "/:id",
+  authMiddleware.requireAdmin.bind(authMiddleware),
+  upload.single("foto_perfil"),
+  usuariosController.update
+);
+
+/**
+ * @swagger
+ * /api/v1/usuarios/{id}/estado:
+ *   patch:
+ *     summary: Activar o desactivar a un usuario (solo administradores)
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [activo]
+ *             properties:
+ *               activo:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Estado actualizado
+ */
+router.patch(
+  "/:id/estado",
+  authMiddleware.requireAdmin.bind(authMiddleware),
+  usuariosController.updateEstado
 );
 
 export default router;

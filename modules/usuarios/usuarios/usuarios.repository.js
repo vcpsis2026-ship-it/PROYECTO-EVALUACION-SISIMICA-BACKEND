@@ -21,19 +21,26 @@ const baseQuery = () =>
   db(`${DatabaseTable.usuarios} as u`)
     .leftJoin(`${DatabaseTable.roles} as r`, "r.id", "u.rol_id");
 
-const findAll = () =>
-  baseQuery().select(BASE_COLS).where({ "u.activo": true }).orderBy("u.nombre", "asc");
+const findAll = (activo = null) => {
+  const query = baseQuery().select(BASE_COLS);
+  if (activo !== null) {
+    query.where({ "u.activo": activo });
+  }
+  return query.orderBy("u.nombre", "asc");
+};
 
 const findByRole = (rolCodigo) =>
   baseQuery()
     .select(BASE_COLS)
     .where({ "r.codigo": rolCodigo, "u.activo": true });
 
-const findById = (id) =>
-  baseQuery()
-    .select(BASE_COLS)
-    .where({ "u.id_usuario": id, "u.activo": true })
-    .first();
+const findById = (id, soloActivos = true) => {
+  const query = baseQuery().select(BASE_COLS).where({ "u.id_usuario": id });
+  if (soloActivos) {
+    query.andWhere({ "u.activo": true });
+  }
+  return query.first();
+};
 
 const findPasswordHash = (id) =>
   db(DatabaseTable.usuarios).select("password_hash").where({ id_usuario: id }).first();
@@ -54,6 +61,12 @@ const updateRol = async (trx, id, rolCodigo) => {
     .returning(["id_usuario", "nombre", "email", "rol_id"]);
 };
 
+const updateEstado = (trx, id, activo) =>
+  trx(DatabaseTable.usuarios)
+    .where({ id_usuario: id })
+    .update({ activo })
+    .returning(["id_usuario", "nombre", "activo"]);
+
 export default {
   findAll,
   findByRole,
@@ -61,4 +74,5 @@ export default {
   findPasswordHash,
   update,
   updateRol,
+  updateEstado,
 };

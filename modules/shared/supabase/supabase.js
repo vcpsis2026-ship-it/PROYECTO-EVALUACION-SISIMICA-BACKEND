@@ -8,7 +8,11 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-const uploadFile = async (file, folder) => {
+/**
+ * Función utilitaria para subir archivos al bucket configurado.
+ * Genera un nombre único con timestamp y retorna la metadata del archivo.
+ */
+export const uploadFile = async (file, folder) => {
   if (!file) throw new Error("Archivo no recibido");
 
   const fileName = `${Date.now()}_${file.originalname}`;
@@ -26,4 +30,9 @@ const uploadFile = async (file, folder) => {
   return data;
 };
 
-export default { uploadFile };
+/**
+ * Se exporta supabase.storage como default para que los servicios
+ * puedan usar bucket.from(BUCKET).upload(...) y bucket.from(BUCKET).getPublicUrl(...)
+ * directamente con la API nativa del SDK de Supabase.
+ */
+export default supabase.storage;

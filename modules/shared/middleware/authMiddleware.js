@@ -66,9 +66,12 @@ class AuthMiddleware {
         });
       }
 
+      // Consultar el rol del usuario haciendo JOIN con la tabla roles
+      // ya que la columna usuarios.rol_id es una FK a roles.id
       const user = await db(DatabaseTable.usuarios)
-        .select("rol")
-        .where("id_usuario", req.user.id)
+        .select("r.codigo as rol_codigo")
+        .leftJoin(`${DatabaseTable.roles} as r`, "r.id", `${DatabaseTable.usuarios}.rol_id`)
+        .where(`${DatabaseTable.usuarios}.id_usuario`, req.user.id)
         .first();
 
       if (!user) {
@@ -77,7 +80,7 @@ class AuthMiddleware {
         });
       }
 
-      if (user.rol !== "admin") {
+      if (user.rol_codigo !== "administrador") {
         return res.status(403).send({
           error: {
             code: AnomalyCode.forbidden,
