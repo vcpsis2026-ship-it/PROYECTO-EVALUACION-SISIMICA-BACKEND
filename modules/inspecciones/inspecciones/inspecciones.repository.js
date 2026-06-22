@@ -31,9 +31,19 @@ const findById = (id) =>
     .first();
 
 const findByEdificio = (idEdificio) =>
-  db(DatabaseTable.inspecciones)
-    .where({ id_edificio: idEdificio })
-    .orderBy("created_at", "desc");
+  db(`${DatabaseTable.inspecciones} as i`)
+    .select(
+      "i.*",
+      "e.nombre_edificio",
+      "e.direccion",
+      "u.nombre as nombre_inspector",
+      "ei.nombre as nombre_estado"
+    )
+    .leftJoin(`${DatabaseTable.edificios} as e`, "e.id_edificio", "i.id_edificio")
+    .leftJoin(`${DatabaseTable.usuarios} as u`, "u.id_usuario", "i.id_usuario")
+    .leftJoin(`${DatabaseTable.estadosInspeccion} as ei`, "ei.codigo", "i.estado")
+    .where("i.id_edificio", idEdificio)
+    .orderBy("i.created_at", "desc");
 
 const insert = (trx, data) =>
   trx(DatabaseTable.inspecciones).insert(data).returning("*");

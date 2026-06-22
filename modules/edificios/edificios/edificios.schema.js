@@ -37,6 +37,8 @@ export const EdificioSchema = z.object({
       (f) => !f || (f.buffer && ["image/jpeg", "image/png"].includes(f.mimetype)),
       "El gráfico debe ser JPG o PNG"
     ),
+  foto_edificio_url: z.string().url().optional().nullable(),
+  grafico_edificio_url: z.string().url().optional().nullable(),
 });
 
 export const UpdateEdificioSchema = EdificioSchema.partial();

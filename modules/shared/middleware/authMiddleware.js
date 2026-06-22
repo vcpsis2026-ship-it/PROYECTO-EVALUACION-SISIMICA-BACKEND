@@ -10,7 +10,7 @@ class AuthMiddleware {
   }
 
   issueTokens(payload) {
-    return jwt.sign(payload, this.accessSecret, { expiresIn: "40m" });
+    return jwt.sign(payload, this.accessSecret, { expiresIn: "1h" });
   }
 
   authenticateUser(req, res, next) {
